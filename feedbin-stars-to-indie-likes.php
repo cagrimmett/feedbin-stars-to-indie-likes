@@ -3,13 +3,14 @@
  * Plugin Name:       Feedbin Stars to Indie Likes
  * Plugin URI:        https://github.com/cagrimmett/feedbin-stars-to-indie-likes
  * Description:       Takes starred posts from Feedbin and turns them into Indie Likes.
- * Version:           0.0.1
+ * Version:           0.0.2
  * Author:            cagrimmett
  * Author URI:        https://cagrimmett.com
- * Text Domain:       fs2il
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
+
+require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 function fs2il_activate() {
 	global $wpdb;
@@ -41,20 +42,15 @@ function fs2il_activate() {
 		'fs2il_settings',
 		'fs2il_date'
 	);
+	// schedule cron hook
+	if ( ! wp_next_scheduled( 'fs2il_hook' ) ) {
+		wp_schedule_event( time(), 'hourly', 'fs2il_hook' );
+	}
 }
 register_activation_hook( __FILE__, 'fs2il_activate' );
 
-// schedule a cron job to run every 5 minutes
-function fs2il_schedule() {
-	wp_schedule_event( time(), 'hourly', 'fs2il_fetch_new_likes' );
-}
-
-register_activation_hook( __FILE__, 'fs2il_schedule' );
-// hook that function onto our scheduled event
-add_action( 'fs2il_fetch_new_likes', 'fs2il_convert_stars_to_likes' );
-
 function fs2il_deactivate() {
-	wp_clear_scheduled_hook( 'fs2il_fetch_new_likes' );
+	wp_clear_scheduled_hook( 'fs2il_hook' );
 }
 register_deactivation_hook( __FILE__, 'fs2il_deactivate' );
 
@@ -155,6 +151,9 @@ function fs2il_convert_stars_to_likes() {
 		return;
 	}
 }
+
+// hook that function onto our scheduled event
+add_action( 'fs2il_hook', 'fs2il_convert_stars_to_likes' );
 
 function fs2il_options_page() {
 	add_submenu_page(
@@ -262,8 +261,8 @@ function fs2il_settings_page() {
 }
 
 function fs2il_settings_link( $links ) {
-    $settings_link = '<a href="' . admin_url( 'tools.php?page=fs2il-settings' ) . '">Settings</a>';
-    array_unshift( $links, $settings_link );
-    return $links;
+	$settings_link = '<a href="' . admin_url( 'tools.php?page=fs2il-settings' ) . '">Settings</a>';
+	array_unshift( $links, $settings_link );
+	return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'fs2il_settings_link' );
