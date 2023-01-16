@@ -29,5 +29,8 @@ This plugin requires the [IndieBlocks](https://wordpress.org/plugins/indieblocks
 
 ## Changelog
 
+### 0.0.2
+* Fixed bug with cron and plugin identification, 2022-12-29
+
 ### 0.0.1
 * Initial release, 2022-12-27
